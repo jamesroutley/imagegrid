@@ -48,8 +48,8 @@ func run(files []string) error {
 
 	margin := calculateMargin(images)
 
-	yMax := maxHeight(images) + (margin * 2)                // margin at top and bottom
-	xMax := sumWidths(images) + (margin * (len(files) + 1)) // margin before each image, and one at the end
+	yMax := maxHeight(images)
+	xMax := sumWidths(images) + (margin * (len(files) - 1)) // margin between each image
 
 	outputImg := image.NewRGBA64(image.Rect(0, 0, xMax, yMax))
 
@@ -126,8 +126,8 @@ func sumWidths(images []image.Image) (sum int) {
 }
 
 func calculateOffsets(images []image.Image, margin int) (offsets []image.Point) {
-	yOffset := margin
-	xOffset := margin
+	yOffset := 0
+	xOffset := 0
 	offsets = make([]image.Point, len(images))
 	for i, img := range images {
 		offsets[i] = image.Point{

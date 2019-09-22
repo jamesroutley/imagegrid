@@ -40,5 +40,4 @@ At [work](https://monzo.com/), I often need to post a series of screenshots of t
 
 ## TODO
 
-- [ ]: Remove bounding margin
 - [ ]: Add a `--col` flag, to specify the number of columns in the grid
