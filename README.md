@@ -12,7 +12,7 @@ And `cat-2.jpg`:
 
 ![Cat 2](example-images/cat-2.jpg)
 
-Comibe them with into a new image:
+Comibe them into a new image:
 
 ```sh
 $ imagegrid cat-1.jpg cat-2.jpg
