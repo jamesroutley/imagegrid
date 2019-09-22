@@ -16,6 +16,8 @@ Comibe them with into a new image:
 
 ```sh
 $ imagegrid cat-1.jpg cat-2.jpg
+$ ls
+imagegrid-image-2019-09-22.png
 ```
 
 ![Combined](example-images/imagegrid-image-2019-09-22.png)
@@ -35,3 +37,8 @@ Usage of imagegrid:
 ## Why?
 
 At [work](https://monzo.com/), I often need to post a series of screenshots of the Monzo app to Slack - stitching them together into a single image seems to be the easiest way to do this.
+
+## TODO
+
+- [ ]: Remove bounding margin
+- [ ]: Add a `--col` flag, to specify the number of columns in the grid
