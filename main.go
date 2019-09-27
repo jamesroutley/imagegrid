@@ -9,6 +9,7 @@ import (
 	_ "image/jpeg"
 	"image/png"
 	"log"
+	"math"
 	"os"
 	"time"
 )
@@ -16,6 +17,7 @@ import (
 var (
 	marginPercent  float64
 	outputFilename string
+	numCols        int
 )
 
 func init() {
@@ -24,12 +26,17 @@ func init() {
 		&outputFilename, "output-filename", fmt.Sprintf("imagegrid-image-%s.png",
 			time.Now().Format("2006-01-02")), "name of the file to save the image to",
 	)
+	flag.IntVar(&numCols, "cols", -1, "Number of columns of images. Negative number or zero indicates puts all images on the same row")
+
+	flag.Parse()
 }
 
 func main() {
-	flag.Parse()
-
 	files := flag.Args()
+
+	if numCols <= 0 {
+		numCols = len(files)
+	}
 
 	if err := run(files); err != nil {
 		log.Fatal(err)
@@ -48,12 +55,26 @@ func run(files []string) error {
 
 	margin := calculateMargin(images)
 
-	yMax := maxHeight(images)
-	xMax := sumWidths(images) + (margin * (len(files) - 1)) // margin between each image
+	numRows := int(math.Ceil(float64(len(images)) / float64(numCols)))
+	imageGroups := make([][]image.Image, numRows)
+	row := 0
+	col := 0
+	for _, img := range images {
+		imageGroups[row] = append(imageGroups[row], img)
+		col++
+
+		if col == numCols {
+			col = 0
+			row++
+		}
+	}
+
+	yMax := height(imageGroups, margin)
+	xMax := width(imageGroups, margin)
 
 	outputImg := image.NewRGBA64(image.Rect(0, 0, xMax, yMax))
 
-	offsets := calculateOffsets(images, margin)
+	offsets := calculateOffsets(imageGroups, margin)
 
 	for i, img := range images {
 		insertImage(outputImg, offsets[i], img)
@@ -96,6 +117,14 @@ func calculateMargin(images []image.Image) (margin int) {
 	return int(float64(height) * marginPercent * 0.01)
 }
 
+func height(imageGroups [][]image.Image, margin int) (max int) {
+	for _, group := range imageGroups {
+		max += maxHeight(group)
+	}
+	max += margin * (len(imageGroups) - 1)
+	return max
+}
+
 func maxHeight(images []image.Image) (max int) {
 	max = 0
 	for _, image := range images {
@@ -112,6 +141,19 @@ func maxHeight(images []image.Image) (max int) {
 	return max
 }
 
+func width(imageGroups [][]image.Image, margin int) int {
+	largestWidth := 0
+	for _, group := range imageGroups {
+		width := sumWidths(group)
+		width += margin * (len(group) - 1)
+		if width > largestWidth {
+			largestWidth = width
+		}
+	}
+
+	return largestWidth
+}
+
 func sumWidths(images []image.Image) (sum int) {
 	sum = 0
 	for _, img := range images {
@@ -125,16 +167,20 @@ func sumWidths(images []image.Image) (sum int) {
 	return sum
 }
 
-func calculateOffsets(images []image.Image, margin int) (offsets []image.Point) {
+func calculateOffsets(imageGroups [][]image.Image, margin int) (offsets []image.Point) {
 	yOffset := 0
 	xOffset := 0
-	offsets = make([]image.Point, len(images))
-	for i, img := range images {
-		offsets[i] = image.Point{
-			X: xOffset,
-			Y: yOffset,
+	for _, row := range imageGroups {
+		for _, img := range row {
+			offset := image.Point{
+				X: xOffset,
+				Y: yOffset,
+			}
+			offsets = append(offsets, offset)
+			xOffset += img.Bounds().Max.X + margin
 		}
-		xOffset += img.Bounds().Max.X + margin
+		xOffset = 0
+		yOffset += maxHeight(row) + margin
 	}
 	return
 }
